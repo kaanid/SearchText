@@ -10,8 +10,6 @@ namespace SearchText
         {
             Console.WriteLine("Hello World!");
 
-            //Console.WriteLine(BMIndex("ohrxgiwojciabrimgthlohrxgiduiduidumk", "iduiduidumk"));
-
             BenchMark(5);
             
             BenchMark(10);
@@ -45,7 +43,7 @@ namespace SearchText
             }
 
             sw.Stop();
-            Console.WriteLine($"arrStr10000 ms:{sw.ElapsedMilliseconds}");
+            Console.WriteLine($"arrStr10000 build string[] ms:{sw.ElapsedMilliseconds}");
 
             sw.Restart();
             int n = 0;
@@ -195,7 +193,88 @@ namespace SearchText
             sw.Stop();
             Console.WriteLine($"arrStr10000 SundayIndex ms:{sw.ElapsedMilliseconds} n:{n} searchText:{str22}");
 
+            sw.Restart();
 
+            //string[] keywords = new string[] { "ab", "abc", "bcd", "abf", "bca" };
+            //string strText = "hello ab,this is abcbcdabf abbcd ab abf abca";
+
+            string[] keywords = new string[] { str2 };
+            var ac = new AhoCorasick();
+            ac.Build(keywords);
+
+            for (int i = 0; i < count; i++)
+            {
+                n = 0;
+                foreach (var str in arrStr10000)
+                {
+                    if (ac.SearchFirst(str,0).Index>=0)
+                    {
+                        n++;
+                        //Console.WriteLine(str);
+                    }
+                }
+            }
+            sw.Stop();
+            Console.WriteLine($"arrStr10000 AC_SearchFirst ms:{sw.ElapsedMilliseconds} n:{n} searchText:{str22}");
+
+
+            Console.WriteLine($"===============arrStr10000 find 3 words");
+
+            sw.Restart();
+
+            //string[] keywords = new string[] { "ab", "abc", "bcd", "abf", "bca" };
+            //string strText = "hello ab,this is abcbcdabf abbcd ab abf abca";
+
+            var keywords2 = new string[] { str2, str2 + "a", str2 + "b" };
+            ac = new AhoCorasick();
+            ac.Build(keywords2);
+
+            for (int i = 0; i < count; i++)
+            {
+                n = 0;
+                foreach (var str in arrStr10000)
+                {
+                    if (ac.SearchFirst(str, 0).Index >= 0)
+                    {
+                        n++;
+                        //Console.WriteLine(str);
+                    }
+                }
+            }
+            sw.Stop();
+            Console.WriteLine($"arrStr10000 AC_SearchFirst ms:{sw.ElapsedMilliseconds} n:{n} words:{keywords2.Length}");
+
+            sw.Restart();
+            for (int i = 0; i < count; i++)
+            {
+                n = 0;
+                foreach (var str in arrStr10000)
+                {
+                    if (SundayIndex(str, keywords2[0]) >= 0)
+                    {
+                        n++;
+                        //Console.WriteLine(str);
+                    }
+
+                    if (SundayIndex(str, keywords2[1]) >= 0)
+                    {
+                        n++;
+                        //Console.WriteLine(str);
+                    }
+
+                    if (SundayIndex(str, keywords2[2]) >= 0)
+                    {
+                        n++;
+                        //Console.WriteLine(str);
+                    }
+                }
+            }
+            sw.Stop();
+            Console.WriteLine($"arrStr10000 SundayIndex ms:{sw.ElapsedMilliseconds} n:{n} words:{keywords2.Length}");
+
+            sw.Restart();
+
+            Console.WriteLine();
             Console.WriteLine($"BenchMark len:{len} count:{count} end");
         }
 
@@ -534,41 +613,62 @@ namespace SearchText
             int i=0;
             int i2=0;
             int i3=0;
-            int k=str2.Length-1;
+            int i4 = 0;
+            int index = 0;
+
+            int k=str2.Length;
+            
             int n=0;
             int m=0;
 
-            while(i<str.Length-str2.Length)
+            while(i<=str.Length-str2.Length)
             {
                 if(str[i]==str2[0])
                 {
                     n=k-1;
                     i2=i+1;
                     i3=i+k;
-                    for(int ii=i2;ii<i3;ii++)
+                    i4 = 0;
+                    try
                     {
-                        n--;
-                        if(str[ii]!=str2[ii-i])
+                        for (int ii = i2; ii < i3; ii++)
                         {
+                            if (str[ii] != str2[++i4])
+                            {
+                                break;
+                            }
 
-                            break;
+                            n--;
+                            if (n == 0)
+                                return i;
                         }
-                        
-                        if(n==0)
-                            return i;
+                    }
+                    catch(Exception ex)
+                    {
+                        Console.WriteLine($"n:{n},i2:{i2},i3:{i3} str:{str},str2:{str2} ");
+                        return 0;
                     }
                 }
 
-                m=str2.LastIndexOf(str[i+1]);
-                if(m>=0)
-                {
-                    i+=m+1;
-                }
-                else{
-                    i+=str2.Length+1;
-                }
+                index = i + str2.Length;
+                if (index >=str.Length)
+                    break;
 
+                m = str2.LastIndexOf(str[index]);
+                if (m > 0)
+                {
+                    //i =index- m;
+                    i +=k- m;
+                }
+                else
+                {
+                    i = index;
+                }
             }
+
+            if (str.Contains(str2))
+                Console.WriteLine($"SundayIndex str:{str},str2:{str2}");
+
             return -1;
         }
     }
